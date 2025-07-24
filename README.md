@@ -2,7 +2,7 @@
 
 [![Industry_Inspection](https://img.shields.io/badge/Task-Industry_Inspection-white)](https://github.com/M-3LAB/awesome-industrial-anomaly-detection) 
 
-[![arXiv](https://img.shields.io/badge/Paper-arXiv-red)](https://arxiv.org/abs/2410.09453)
+<!-- [![arXiv](https://img.shields.io/badge/Paper-arXiv-red)](https://arxiv.org/abs/2410.09453) -->
 [![Hugging Face](https://img.shields.io/badge/Model-Hugging%20Face-yellow)](https://huggingface.co/gw49/EMIT-8B) 
 
 ## 👀 Overview
@@ -132,6 +132,8 @@ The `--checkpoint` argument points to the model checkpoint located at `/mnt/vlr/
 The `--data-root` argument specifies the MMAD dataset directory at `/mnt/vlr/laishi/ALL_DATA/`.
 
 #### Evaluate Our Trained Model
+You can effortlessly download our pre-trained model 😊[EMIT-8B](https://huggingface.co/gw49/EMIT-8B) for testing.
+
 The `evaluate_batch_mmad_choice.py` script, located in the project's root directory, is designed to evaluate our methods. The script requires the following mandatory arguments:
 - `--checkpoint`: Specifies the path to the model checkpoint.
 - `--data-root`: Provides the root directory for the MMAD dataset.
