@@ -3,7 +3,7 @@
 [![Industry_Inspection](https://img.shields.io/badge/Task-Industry_Inspection-white)](https://github.com/M-3LAB/awesome-industrial-anomaly-detection) 
 
 [![arXiv](https://img.shields.io/badge/Paper-arXiv-red)](https://arxiv.org/abs/2410.09453)
-[![Hugging Face](https://img.shields.io/badge/Model-Hugging%20Face-yellow)](https://huggingface.co/datasets/jiang-cc/MMAD) 
+[![Hugging Face](https://img.shields.io/badge/Model-Hugging%20Face-yellow)](https://huggingface.co/gw49/EMIT-8B) 
 
 ## 👀 Overview
 Industrial anomaly detection (IAD) plays a crucial role in maintaining the safety and reliability of manufacturing systems. While Multimodal Large Language Models (MLLMs) show strong vision-language reasoning abilities, their effectiveness in IAD remains limited without domain-specific adaptation. In this work, we propose EMIT, a unified framework that enhances MLLMs for IAD via difficulty-aware Group Relative Policy Optimization (GRPO). EMIT constructs a multi-task IAD dataset and utilizes GPT-generated descriptions to compensate for missing defective images. For few-shot anomaly detection, it integrates soft prompts and heatmap-guided contrastive embeddings derived from patch-level comparisons. To better train on challenging cases, we propose a difficulty-aware GRPO that includes a resampling strategy and an advantage reweighting mechanism to emphasize hard samples. Extensive experiments on the MMAD benchmark demonstrate that EMIT significantly enhances the IAD performance of MLLMs, improving the base model (InternVL3) by an average of 7.77\%.
