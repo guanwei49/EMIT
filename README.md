@@ -111,8 +111,8 @@ unzip ALL_DATA.zip
 ### 4. Run Evaluation
 #### Benchmark Methods
 The Python scripts for testing existing open-source MLLMs are located in the `eval_benchmark` folder. Each script requires the following mandatory arguments:  
---checkpoint: Specifies the path to the model checkpoint.
---data-root: Provides the root directory for the MMAD dataset.
+- `--checkpoint`: Specifies the path to the model checkpoint.
+- `--data-root`: Provides the root directory for the MMAD dataset.
 
 Example Usage
 1. Navigate to the project's root directory.  
@@ -128,13 +128,13 @@ Example Usage
     ```
 In this example:
 
-The `--checkpoint` argument points to the model checkpoint located at /mnt/vlr/laishi/llava-interleave-qwen-7b-hf.
-The `--data-root` argument specifies the MMAD dataset directory at /mnt/vlr/laishi/ALL_DATA/.
+The `--checkpoint` argument points to the model checkpoint located at `/mnt/vlr/laishi/llava-interleave-qwen-7b-hf`.
+The `--data-root` argument specifies the MMAD dataset directory at `/mnt/vlr/laishi/ALL_DATA/`.
 
 #### Evaluate Our Trained Model
 The `evaluate_batch_mmad_choice.py` script, located in the project's root directory, is designed to evaluate our methods. The script requires the following mandatory arguments:
---checkpoint: Specifies the path to the model checkpoint.
---data-root: Provides the root directory for the MMAD dataset.
+- `--checkpoint`: Specifies the path to the model checkpoint.
+- `--data-root`: Provides the root directory for the MMAD dataset.
 
 Example Usage
 1. Navigate to the project's root directory.  
@@ -150,8 +150,8 @@ Example Usage
     ```
 In this example:
 
-The `--checkpoint` argument points to the model checkpoint located at /mnt/vlr/laishi/EMIT-8B.
-The `--data-root` argument specifies the MMAD dataset directory at /mnt/vlr/laishi/ALL_DATA/.
+The `--checkpoint` argument points to the model checkpoint located at `/mnt/vlr/laishi/EMIT-8B`.
+The `--data-root` argument specifies the MMAD dataset directory at `/mnt/vlr/laishi/ALL_DATA/`.
 
 
 <!-- ## BibTex Citation
