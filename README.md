@@ -11,6 +11,14 @@ Industrial anomaly detection (IAD) plays a crucial role in maintaining the safet
 
 ![](./figs/result.jpg)
 
+
+## 📦 Install Dependencies
+Before running the project, make sure to install all the required Python packages. You can do this easily using the `requirements.txt` file:
+
+```bash
+pip install -r requirements.txt
+```
+
 ## 🔮 Training and Evaluation Pipeline
 
 ### 1. Training Data Preparation
