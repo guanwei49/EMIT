@@ -33,4 +33,4 @@ torchrun \
   --system sysprompt.txt \
   --model /mnt/vlr/laishi/InternVL3-8B \
   --dataset /mnt/vlr/laishi/train_stage1_data.jsonl \
-  --output_dir stage1_outputs \
+  --output_dir stage1_outputs
