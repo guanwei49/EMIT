@@ -968,7 +968,12 @@ class GRPOTrainer(RLHFTrainerMixin, SwiftMixin, HFGRPOTrainer):
         except StopIteration:
             raise ValueError("No 'CLSAccuracyORM_choice' reward found in reward_funcs")
 
-        while resample_count < self.args.max_resample_times:
+        while resample_count < self.args.max_resample_times or len(valid_samples) == 0:  # 任何样本都没有正确答案。
+            if resample_count > 10:
+                logger.warning(
+                    f"Resampling exceeded 10 times (current: {resample_count}), "
+                    "still unable to obtain correct answers for any sample."
+                )
             # grouped_rewards = rewards.view(-1, self.num_generations)
             # group_std = grouped_rewards.std(dim=1)
             # group_min = grouped_rewards.min(dim=1)
