@@ -944,188 +944,8 @@ class GRPOTrainer(RLHFTrainerMixin, SwiftMixin, HFGRPOTrainer):
 
         return total_rewards_per_func, total_rewards, completions
 
-    # def _dynamic_sampling(self, inputs, rewards, rewards_per_func, completions):
-    #     # DAPO https://arxiv.org/abs/2503.14476
-    #     # Replaces samples with zero-reward-variance groups (std=0)
-    #     resample_count = 0
-    #     valid_samples = []
-    #     valid_rewards = []
-    #     valid_rewards_per_func = []
-    #     valid_completions = []
-    #
-    #     # origin_data = (inputs, rewards, rewards_per_func, completions)
-    #
-    #
-    #     idx = next((i for i, obj in enumerate(self.reward_funcs) if type(obj).__name__ == "CLSAccuracyORM_choice"), None)
-    #     while resample_count < self.args.max_resample_times:
-    #         # grouped_rewards = rewards.view(-1, self.num_generations)
-    #
-    #         # print(grouped_rewards)
-    #         # print('-'*10)
-    #         ## customized
-    #         grouped_rewards = rewards_per_func[:,idx].view(-1, self.num_generations)         # 使用‘CLSAccuracyORM_choice’ reward
-    #
-    #         # print(grouped_rewards)
-    #         # print('-'*10)
-    #         # group_std = grouped_rewards.std(dim=1)
-    #         # group_min = grouped_rewards.min(dim=1)
-    #
-    #         # # 标记有效的组，如果标准差大于0或最小值大于0，则视为有效
-    #         # valid_mask = ((group_std > 0) | (group_min > 0)).repeat_interleave(self.num_generations)
-    #
-    #         # 检查是否存在大于0的值，如果不存在，则为无效组 ；True为不存在
-    #         group_all_non_positive = (grouped_rewards <= 0).all(dim=1)
-    #
-    #         # 标记有效的组
-    #         valid_mask = (~group_all_non_positive).repeat_interleave(self.num_generations)
-    #
-    #         # 标记无效的组，随机保留一个true
-    #         # 找出所有 `True` 的位置索引
-    #         true_indices = torch.nonzero(group_all_non_positive, as_tuple=True)[0]
-    #
-    #         # 如果至少有一个 `True`
-    #         if true_indices.numel() > 0:
-    #             k = len(inputs)//self.num_generations
-    #             true_indices_list = true_indices.tolist()
-    #             # 如果 true_indices 的元素数量大于等于 k
-    #             if len(true_indices_list) >= k:
-    #                 # 直接随机采样 k 个不重复的元素
-    #                 random_idx = random.sample(true_indices_list, k)   #随机选择无效样本，使每一个gpu上的无效样本不同。
-    #             else:  # 如果 true_indices 的元素数量不足 k
-    #                 # 先取所有元素
-    #                 random_idx = true_indices_list[:]
-    #                 # 再从 true_indices 中随机重复采样，直到满足 k 个
-    #                 random_idx += random.choices(true_indices_list, k=k - len(true_indices_list))  # 使用 random.choices 支持重复抽取
-    #
-    #             group_all_non_positive[:] = False  # 将所有位置设置为 False
-    #             group_all_non_positive[random_idx] = True  # 只保留第一个 `True`
-    #         # print(random_idx)
-    #         # print(group_all_non_positive)
-    #         # 有效组的定义：不存在大于0的reward（CLSAccuracyORM_choice）
-    #         invalid_mask = group_all_non_positive.repeat_interleave(self.num_generations)   #无效样本用于后续重新采样。
-    #
-    #         # print(valid_mask)
-    #
-    #         all_inputs = gather_object(inputs)
-    #         valid_samples.extend([inp for inp, mask in zip(all_inputs, valid_mask) if mask])
-    #         valid_rewards.append(rewards[valid_mask])
-    #         valid_rewards_per_func.append(rewards_per_func[valid_mask])
-    #         valid_completions.extend(
-    #             [inp['messages'][-1]['content'] for inp, mask in zip(all_inputs, valid_mask) if mask])
-    #
-    #
-    #         # print('ddddddd')
-    #         # print(len(valid_samples))
-    #         if len(valid_samples) >= self.effective_train_batch_size:
-    #             break
-    #
-    #         # inputs = next(self.resample_iterator)                               ##extract input samples whose completions' std is 0.
-    #         # print('pre_i')
-    #         # print(inputs)
-    #         # print(len(inputs))
-    #         # print('-' * 10)
-    #         # inputs = Trainer._prepare_inputs(self, inputs)
-    #         # inputs = self._generate_completions(inputs)
-    #         # rewards_per_func, rewards, completions = self._score_completions(inputs)
-    #
-    #         # 使用无效样本重新生成 completions
-    #         invalid_samples = [inp for inp, mask in zip(all_inputs, invalid_mask) if mask]
-    #         # print('afterin ')
-    #         # print(invalid_samples)
-    #         # print(len(invalid_samples))
-    #         # print('-' * 10)
-    #         inputs = Trainer._prepare_inputs(self, invalid_samples)  # 准备无效样本重新采样
-    #         inputs = self._generate_completions(inputs)  # 对无效样本重新生成 completions
-    #         rewards_per_func, rewards, completions = self._score_completions(
-    #             inputs)  # 重新计算奖励
-    #
-    #         resample_count += 1
-    #
-    #     if len(valid_samples) >= self.effective_train_batch_size:
-    #         process_slice = slice(
-    #             self.accelerator.process_index * len(inputs),
-    #             (self.accelerator.process_index + 1) * len(inputs),
-    #         )
-    #         inputs = valid_samples[:self.effective_train_batch_size][process_slice]
-    #         rewards = torch.cat(valid_rewards)[:self.effective_train_batch_size]
-    #         rewards_per_func = torch.cat(valid_rewards_per_func)[:self.effective_train_batch_size]
-    #         completions = valid_completions[:self.effective_train_batch_size][process_slice]
-    #     else:
-    #         def resample_groups(data, group_size, k):
-    #             """
-    #             从原始 m 组数据扩展为 k 组数据，支持 list 和 torch.Tensor 数据类型。
-    #             支持二维和三维 Tensor 数据，均按第一个维度进行划分。
-    #
-    #             Args:
-    #                 data (list or torch.Tensor): 输入数据（一维 list 或 一维/二维 torch.Tensor）。
-    #                 group_size (int): 每组的大小（例如 4 个元素一组）。
-    #                 k (int): 目标组数（k > m 的情况）。
-    #
-    #             Returns:
-    #                 list 或 torch.Tensor: 总长度为 k * group_size 的数据，返回类型与输入类型一致。
-    #             """
-    #             # 判断类型
-    #             if isinstance(data, torch.Tensor):
-    #                 # 获取 Tensor 的 shape 并检查维度
-    #                 original_shape = data.shape
-    #                 if len(original_shape) == 2:  # 2D Tensor
-    #                     num_groups = original_shape[0] // group_size
-    #                     reshaped_data = data.view(num_groups, group_size,
-    #                                               original_shape[1])  # 转换为 [m, group_size, feature_dim]
-    #                 elif len(original_shape) == 1:  # 3D Tensor
-    #                     num_groups = original_shape[0] // group_size
-    #                     reshaped_data = data.view(num_groups, group_size)  # 转换为 [m, group_size]
-    #                 else:
-    #                     raise ValueError("支持的 Tensor 输入必须是二维或一维。")
-    #             elif isinstance(data, list):
-    #                 # 将 List 按 group_size 分组
-    #                 num_groups = len(data) // group_size
-    #                 reshaped_data = [data[i * group_size:(i + 1) * group_size] for i in
-    #                                  range(num_groups)]  # 转换为 [m, group_size]
-    #             else:
-    #                 raise TypeError("输入数据必须是 list 或 torch.Tensor。")
-    #
-    #             # 判断是否需要扩展
-    #             if k <= num_groups:
-    #                 resampled_groups = reshaped_data[-k:]  # 直接截取后 k 组
-    #             else:
-    #                 repeat_count = (k + num_groups - 1) // num_groups  # 至少重复多少次以满足 k
-    #                 if isinstance(data, torch.Tensor):
-    #                     # Repeat Tensor 并截取所需组数
-    #                     if len(original_shape) == 2:  # 2D Tensor
-    #                         extended_data = reshaped_data.repeat(repeat_count, 1, 1)  # 按第一个维度重复
-    #                     elif len(original_shape) == 1:  # 3D Tensor
-    #                         extended_data = reshaped_data.repeat(repeat_count, 1)  # 按第一个维度重复
-    #                     resampled_groups = extended_data[-k:]  # 截取前 k 组
-    #                 elif isinstance(data, list):
-    #                     # Repeat list 并截取所需组数
-    #                     extended_data = reshaped_data * repeat_count  # 按组重复
-    #                     resampled_groups = extended_data[-k:]  # 截取前 k 组
-    #
-    #             # 展平数据并返回
-    #             if isinstance(data, torch.Tensor):
-    #                 return resampled_groups.flatten(0, 1)  # 展平为 Tensor
-    #             elif isinstance(data, list):
-    #                 return [item for group in resampled_groups for item in group]  # 展平为 List
-    #
-    #         number_groups = (self.effective_train_batch_size)//self.num_generations
-    #         process_slice = slice(
-    #             self.accelerator.process_index * len(inputs),
-    #             (self.accelerator.process_index + 1) * len(inputs),
-    #         )
-    #         inputs = resample_groups(valid_samples,self.num_generations,number_groups)[process_slice]
-    #         rewards = resample_groups(torch.cat(valid_rewards),self.num_generations,number_groups)
-    #         rewards_per_func = resample_groups(torch.cat(valid_rewards_per_func),self.num_generations,number_groups)
-    #         completions = resample_groups(valid_completions,self.num_generations,number_groups)[process_slice]
-    #
-    #         logger.warning(f'There are still no correct answer groups present after {self.args.max_resample_times} retries.')
-    #         # inputs, rewards, rewards_per_func, completions = origin_data
-    #
-    #     return inputs, rewards, rewards_per_func, completions
-
 
     def _dynamic_sampling(self, inputs, rewards, rewards_per_func, completions):
-        # DAPO https://arxiv.org/abs/2503.14476
         # 对没有正确答案的样本，重新采样
         resample_count = 0
         valid_samples = []
@@ -1143,7 +963,11 @@ class GRPOTrainer(RLHFTrainerMixin, SwiftMixin, HFGRPOTrainer):
 
         local_sample_index = None
 
-        idx = next((i for i, obj in enumerate(self.reward_funcs) if type(obj).__name__ == "CLSAccuracyORM_choice"), None)
+        try:
+            idx = next(i for i, obj in enumerate(self.reward_funcs) if type(obj).__name__ == "CLSAccuracyORM_choice")
+        except StopIteration:
+            raise ValueError("No 'CLSAccuracyORM_choice' reward found in reward_funcs")
+
         while resample_count < self.args.max_resample_times:
             # grouped_rewards = rewards.view(-1, self.num_generations)
             # group_std = grouped_rewards.std(dim=1)
@@ -1422,8 +1246,10 @@ class GRPOTrainer(RLHFTrainerMixin, SwiftMixin, HFGRPOTrainer):
         std_grouped_rewards = grouped_rewards.std(dim=1).repeat_interleave(self.num_generations, dim=0)
 
         ##  customized
-        idx = next((i for i, obj in enumerate(self.reward_funcs) if type(obj).__name__ == "CLSAccuracyORM_choice"),
-                   None)
+        try:
+            idx = next(i for i, obj in enumerate(self.reward_funcs) if type(obj).__name__ == "CLSAccuracyORM_choice")
+        except StopIteration:
+            raise ValueError("No 'CLSAccuracyORM_choice' reward found in reward_funcs")
         answer_acc_rewards = rewards_per_func[:,idx]
         grouped_answer_acc_rewards = answer_acc_rewards.view(-1, self.num_generations)
         advantage_weight = ((grouped_answer_acc_rewards<=0).sum(dim=1) / self.num_generations).repeat_interleave(self.num_generations, dim=0)
