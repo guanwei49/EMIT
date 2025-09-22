@@ -968,12 +968,7 @@ class GRPOTrainer(RLHFTrainerMixin, SwiftMixin, HFGRPOTrainer):
         except StopIteration:
             raise ValueError("No 'CLSAccuracyORM_choice' reward found in reward_funcs")
 
-        while resample_count < self.args.max_resample_times or len(valid_samples) == 0:  # 任何样本都没有正确答案。
-            if resample_count > 10:
-                logger.warning(
-                    f"Resampling exceeded 10 times (current: {resample_count}), "
-                    "still unable to obtain correct answers for any sample."
-                )
+        while True:
             # grouped_rewards = rewards.view(-1, self.num_generations)
             # group_std = grouped_rewards.std(dim=1)
             # group_min = grouped_rewards.min(dim=1)
@@ -1048,13 +1043,20 @@ class GRPOTrainer(RLHFTrainerMixin, SwiftMixin, HFGRPOTrainer):
                         [inp['messages'][-1]['content'] for inp, mask in zip(all_inputs, valid_mask) if mask])
 
 
-            # vv = [inp['messages'][-2]['content'][-50:] for inp in valid_samples]
+            # all_invalid_samples = []  # 当前gpu的无效样本
+            # for index in global_invalid_indexes:
+            #     all_invalid_samples.extend(global_inputs[index * self.num_generations:(index + 1) * self.num_generations])
+            # ivid = set([inp["id"] for inp in all_invalid_samples])
+            # vid = set([inp["id"] for inp in valid_samples])
             # if valid_indices.get_device() == 0:
-            #     print(f'vv{vv}')
+            #     print(f"global_invalid_indexes: {global_invalid_indexes}; global_invalid_sample_id: {ivid}")
+            #     print(f'global_valid_sample_id: {vid}')
             #     print('-' * 10)
-            # else:
-            #     print("????")
 
+
+            # 任何样本都没有正确答案, 那么无限循环
+            if resample_count >= self.args.max_resample_times and len(valid_samples)!=0: # 采样次数大于等于self.args.max_resample_times，并且存在有正确答案的样本
+                break
 
             # 如果至少有一个 无效样本
             if len(global_invalid_indexes) > 0:
@@ -1069,11 +1071,13 @@ class GRPOTrainer(RLHFTrainerMixin, SwiftMixin, HFGRPOTrainer):
                     local_sample_index = invalid_indices_list[:]
                     # 再从 true_indices 中随机重复采样，直到满足 k 个
                     local_sample_index += random.choices(invalid_indices_list, k=k - len(invalid_indices_list))  # 使用 random.choices 支持重复抽取
-            else:
+            else:  #没有无效（所有样本都有正确答案）样本
                 break
 
-            # if len(valid_samples) >= self.effective_train_batch_size:
-            #     break
+            if resample_count > 10:
+                logger.warning(
+                    f"Resampling exceeded 10 times (current: {resample_count}), still unable to obtain correct answers for any sample."
+                )
 
             # inputs = next(self.resample_iterator)                               ##extract input samples whose completions' std is 0.
             # if valid_indices.get_device() == 0:
@@ -1087,14 +1091,11 @@ class GRPOTrainer(RLHFTrainerMixin, SwiftMixin, HFGRPOTrainer):
 
             # 使用无效样本重新生成 completions
             # invalid_samples = [inp for inp, mask in zip(global_inputs, invalid_mask) if mask]
-            invalid_samples = []
+            invalid_samples = []         # 当前gpu的无效样本
             for index in local_sample_index:
                 invalid_samples.extend(global_inputs[index*self.num_generations:(index+1)*self.num_generations])
 
-            # if valid_indices.get_device() == 0:
-            #     print(f"invalid_samples{ invalid_samples}")
-                # print(f"len invalid_samples{ len(invalid_samples)}")
-                # print('-' * 10)
+
             inputs = Trainer._prepare_inputs(self, invalid_samples)  # 准备无效样本重新采样
             inputs = self._generate_completions(inputs)  # 对无效样本重新生成 completions
             rewards_per_func, rewards, completions = self._score_completions(
@@ -1193,8 +1194,7 @@ class GRPOTrainer(RLHFTrainerMixin, SwiftMixin, HFGRPOTrainer):
             #     print(f"rewards{len(rewards)}")
             #     print(f"completions{completions}")
 
-
-            logger.warning(f'There are still no correct answer groups present after {self.args.max_resample_times} retries.')
+            logger.warning(f'There are still no correct answer for some samples present after {self.args.max_resample_times} retries.')
             # inputs, rewards, rewards_per_func, completions = origin_data
 
         return inputs, rewards, rewards_per_func, completions
