@@ -70,7 +70,7 @@ class CLSAccuracyORM_choice(ORM):
         for content, sol in zip(completions, solution):
             reward = 0.0
 
-            content_match = re.search(r'<answer>(.*?)</answer>', content)
+            content_match = re.search(r'<answer>(.*?)</answer>', content, re.DOTALL | re.IGNORECASE)
             student_answer = content_match.group(1).strip() if content_match else content.strip()
 
             ground_truth = sol.strip().replace(' ','').replace('_','').replace('.','').replace('\n','').lower()
