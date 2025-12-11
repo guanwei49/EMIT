@@ -178,8 +178,14 @@ The `--checkpoint` argument points to the model checkpoint located at `/mnt/vlr/
 The `--data-root` argument specifies the MMAD dataset directory at `/mnt/vlr/laishi/ALL_DATA/`.
 
 
-<!-- ## BibTex Citation
+## BibTex Citation
 
 If you find this paper and repository useful, please cite our paper☺️.
-```bibtex
-``` -->
+```
+@article{guan2025emit,
+  title={EMIT: Enhancing MLLMs for Industrial Anomaly Detection via Difficulty-Aware GRPO},
+  author={Guan, Wei and Lan, Jun and Cao, Jian and Tan, Hao and Zhu, Huijia and Wang, Weiqiang},
+  journal={arXiv preprint arXiv:2507.21619},
+  year={2025}
+}
+```  
