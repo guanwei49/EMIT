@@ -2,7 +2,7 @@
 
 [![Industry_Inspection](https://img.shields.io/badge/Task-Industry_Inspection-white)](https://github.com/M-3LAB/awesome-industrial-anomaly-detection) 
 
-
+[![arXiv](https://img.shields.io/badge/Paper-arXiv-red)](https://arxiv.org/abs/2507.21619)
 [![Hugging Face](https://img.shields.io/badge/Model-Hugging%20Face-yellow)](https://huggingface.co/gw49/EMIT-8B) 
 
 ## 👀 Overview
@@ -181,5 +181,15 @@ In this example:
 The `--checkpoint` argument points to the model checkpoint located at `/mnt/vlr/laishi/EMIT-8B`.
 The `--data-root` argument specifies the MMAD dataset directory at `/mnt/vlr/laishi/ALL_DATA/`.
 
+## BibTex Citation
 
+If you find this paper and repository useful, please cite our paper☺️.
+```
+@article{guan2025emit,
+  title={EMIT: Enhancing MLLMs for Industrial Anomaly Detection via Difficulty-Aware GRPO},
+  author={Guan, Wei and Lan, Jun and Cao, Jian and Tan, Hao and Zhu, Huijia and Wang, Weiqiang},
+  journal={arXiv preprint arXiv:2507.21619},
+  year={2025}
+}
+```
 
